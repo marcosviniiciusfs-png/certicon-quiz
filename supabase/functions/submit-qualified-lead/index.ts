@@ -61,6 +61,8 @@ async function sendLeadWebhook(payload: LeadPayload, whatsappDigits: string, met
   appendIfPresent(params, "has_down_payment", payload.has_down_payment);
   appendIfPresent(params, "down_payment_value", payload.down_payment_value);
   appendIfPresent(params, "down_payment_range", answers.valorEntradaFaixa);
+  appendIfPresent(params, "valor_entrada", payload.down_payment_value);
+  appendIfPresent(params, "faixa_entrada", answers.valorEntradaFaixa);
   appendIfPresent(params, "monthly_payment_value", payload.monthly_payment_value);
   appendIfPresent(params, "purchase_timeline", payload.purchase_timeline);
   appendIfPresent(params, "source_url", payload.source_url);
