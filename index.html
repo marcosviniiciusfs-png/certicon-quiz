@@ -1683,6 +1683,7 @@
       valorCreditoLabel: "",
       telefone: "",
       leadSaved: false,
+      leadSaving: false,
       leadSaveError: "",
       leadEventId: ""
     };
@@ -1793,6 +1794,7 @@
       updateSummary();
       if (index === 8) {
         startAnalysisProgress();
+        saveQualifiedLead();
         analysisTimer = window.setTimeout(() => showScreen(9), 5000);
       }
       if (index === 9) {
@@ -2078,7 +2080,7 @@
     }
 
     async function saveQualifiedLead() {
-      if (state.leadSaved) return;
+      if (state.leadSaved || state.leadSaving) return;
 
       if (!isSupabaseConfigured()) {
         state.leadSaveError = "Supabase anon key ausente";
@@ -2086,6 +2088,7 @@
         return;
       }
 
+      state.leadSaving = true;
       try {
         const payload = buildLeadPayload();
         await postLeadToSupabase(payload);
@@ -2095,6 +2098,8 @@
       } catch (error) {
         state.leadSaveError = String(error?.message || error);
         console.error("Erro ao salvar lead qualificado:", error);
+      } finally {
+        state.leadSaving = false;
       }
     }
 
