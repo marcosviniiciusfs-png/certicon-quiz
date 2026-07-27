@@ -685,40 +685,6 @@
       font-family: "Inter", system-ui, sans-serif;
     }
 
-    .queue-box {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 4px;
-      justify-items: center;
-      text-align: center;
-      margin: 6px 0 0;
-    }
-
-    .queue-stat {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0;
-      color: var(--cor-primaria);
-      display: grid;
-      gap: 0;
-      justify-items: center;
-    }
-
-    .queue-stat strong {
-      color: var(--cor-acao);
-      font-size: clamp(1.8rem, 6vw, 2.1rem);
-      line-height: 1;
-      font-weight: 900;
-    }
-
-    .queue-stat span {
-      color: var(--cor-suave);
-      font-size: 0.78rem;
-      font-weight: 700;
-      line-height: 1.35;
-    }
-
     .queue-position strong {
       background: linear-gradient(90deg, #8f75ff 0%, #5b2cff 48%, #3300fd 100%);
       -webkit-background-clip: text;
@@ -730,6 +696,20 @@
     .queue-position {
       width: 100%;
       margin-inline: auto;
+      text-align: center;
+    }
+
+    .contact-wait {
+      width: 100%;
+      margin: 0;
+      padding: 16px 18px;
+      border: 1px solid rgba(51, 0, 253, 0.16);
+      border-radius: var(--raio);
+      background: var(--cor-soft);
+      color: var(--cor-primaria);
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.45;
       text-align: center;
     }
 
@@ -1622,18 +1602,10 @@
           <div class="final-badge">🏆</div>
           <span class="kicker">🎉 Resultado</span>
         </div>
-        <h1 id="resultTitle">Parabéns! Você foi aprovado para uma reunião com um especialista em crédito.</h1>
-        <p class="result-copy" id="resultCopy">Seu perfil foi aprovado e receberá atendimento prioritário.</p>
-        <div class="queue-box">
-          <div class="queue-stat">
-            <strong>3</strong>
-            <span>de 244 pessoas na fila prioritária</span>
-          </div>
-        </div>
+        <h1 id="resultTitle">Parabéns! Logo mais você será atendido por um especialista.</h1>
         <p class="status-note queue-position">Seu perfil recebeu <strong>prioridade no atendimento</strong>.</p>
         <div class="lead-summary" id="leadSummary"></div>
-        <button class="btn full" type="button" data-submit>Falar com especialista</button>
-        <p class="privacy">Ao continuar, você será direcionado ao WhatsApp com suas respostas já organizadas.</p>
+        <p class="contact-wait">Aguarde. Um especialista entrará em contato com você pelo WhatsApp.</p>
       </div>
 
       <div class="screen" data-screen="10">
@@ -1752,8 +1724,7 @@
         : "Para qual bem você está buscando crédito?";
       document.getElementById("entradaTitle").textContent = `${nome}, quanto você tem disponível para dar de entrada?`;
       document.getElementById("valorCreditoTitle").textContent = `${nome}, qual valor de crédito você pretende adquirir?`;
-      document.getElementById("resultTitle").textContent = `Parabéns, ${nome}! Você foi aprovado para uma reunião com um especialista em crédito.`;
-      document.getElementById("resultCopy").textContent = `Seu perfil para ${state.interesse || "crédito"} foi aprovado e receberá atendimento prioritário.`;
+      document.getElementById("resultTitle").textContent = `Parabéns, ${nome}! Logo mais você será atendido por um especialista.`;
       document.getElementById("rejectedTitle").textContent = `Obrigado, ${nome}.`;
     }
 
@@ -2238,8 +2209,6 @@
       });
     });
 
-    document.querySelector("[data-submit]").addEventListener("click", submitToWhatsapp);
-
     nomeInput.addEventListener("input", () => {
       state.nome = nomeInput.value;
       document.getElementById("nomeError").textContent = "";
@@ -2257,8 +2226,6 @@
 
       if (state.screen === 2) {
         if (validateName() && validatePhone()) showScreen(3);
-      } else if (state.screen === 9) {
-        submitToWhatsapp();
       }
     });
 
