@@ -1415,9 +1415,6 @@
   </style>
 </head>
 <body>
-  <noscript>
-    <img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=561285766391551&ev=PageView&noscript=1" />
-  </noscript>
   <main class="app">
     <header class="app-top">
       <div class="live-proof" aria-live="polite">
@@ -1624,13 +1621,8 @@
 
   </main>
 
-  <script src="./config.js"></script>
   <script>
     const WHATSAPP_NUMERO = "55XXXXXXXXXXX";
-    const SUPABASE_URL = window.QUIZ_CONFIG?.SUPABASE_URL || "https://pugqefbsrknxhpeafsjq.supabase.co";
-    const SUPABASE_ANON_KEY = window.QUIZ_CONFIG?.SUPABASE_ANON_KEY || "";
-    const SUPABASE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/submit-qualified-lead`;
-    const META_PIXEL_ID = "561285766391551";
     const LEGACY_STORAGE_KEY = "quiz-hurtz-lead-progress";
     const SOCIAL_PROOF_FIRST_DELAY_MS = 5000;
     const SOCIAL_PROOF_REPEAT_MS = 7000;
@@ -1653,11 +1645,7 @@
       valorEntrada: 0,
       valorCredito: 0,
       valorCreditoLabel: "",
-      telefone: "",
-      leadSaved: false,
-      leadSaving: false,
-      leadSaveError: "",
-      leadEventId: ""
+      telefone: ""
     };
 
     const screens = Array.from(document.querySelectorAll(".screen"));
@@ -1682,7 +1670,6 @@
     let analysisProgressTimer;
     let analysisStepTimers = [];
     let audioReady = false;
-    let metaLeadTracked = false;
 
     function formatCurrency(value) {
       return Number(value).toLocaleString("pt-BR", {
@@ -1765,12 +1752,10 @@
       updateSummary();
       if (index === 8) {
         startAnalysisProgress();
-        saveQualifiedLead();
         analysisTimer = window.setTimeout(() => showScreen(9), 5000);
       }
       if (index === 9) {
         startConfetti();
-        saveQualifiedLead();
       }
     }
 
@@ -1919,159 +1904,6 @@
         "",
         "Pode me chamar para uma simulação?"
       ].join("\n");
-    }
-
-    function isSupabaseConfigured() {
-      return Boolean(
-        SUPABASE_URL
-        && SUPABASE_ANON_KEY
-        && !SUPABASE_ANON_KEY.includes("COLE_AQUI")
-      );
-    }
-
-    function getCookie(name) {
-      return document.cookie
-        .split(";")
-        .map((item) => item.trim())
-        .find((item) => item.startsWith(`${name}=`))
-        ?.split("=")
-        .slice(1)
-        .join("=") || "";
-    }
-
-    function getTrackingParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        utm_source: params.get("utm_source") || "",
-        utm_medium: params.get("utm_medium") || "",
-        utm_campaign: params.get("utm_campaign") || "",
-        utm_content: params.get("utm_content") || "",
-        utm_term: params.get("utm_term") || "",
-        fbclid: params.get("fbclid") || "",
-        fbp: getCookie("_fbp"),
-        fbc: getCookie("_fbc")
-      };
-    }
-
-    function createEventId() {
-      if (window.crypto?.randomUUID) return crypto.randomUUID();
-      return `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    }
-
-    function installMetaPixel() {
-      if (!META_PIXEL_ID || window.__hurtzMetaPixelInitialized) return;
-
-      if (typeof window.fbq !== "function") {
-        const pixel = function() {
-          pixel.callMethod
-            ? pixel.callMethod.apply(pixel, arguments)
-            : pixel.queue.push(arguments);
-        };
-        window.fbq = pixel;
-        if (!window._fbq) window._fbq = pixel;
-        pixel.push = pixel;
-        pixel.loaded = true;
-        pixel.version = "2.0";
-        pixel.queue = [];
-
-        const script = document.createElement("script");
-        script.async = true;
-        script.src = "https://connect.facebook.net/en_US/fbevents.js";
-        const firstScript = document.getElementsByTagName("script")[0];
-        firstScript.parentNode.insertBefore(script, firstScript);
-      }
-
-      window.fbq("init", META_PIXEL_ID);
-      window.fbq("track", "PageView");
-      window.__hurtzMetaPixelInitialized = true;
-    }
-
-    function trackMetaLead(payload) {
-      if (metaLeadTracked || typeof window.fbq !== "function" || !payload?.meta_event_id) return;
-      metaLeadTracked = true;
-      window.fbq("track", "Lead", {
-        content_name: "Quiz Hurtz Company",
-        content_category: "credito",
-        interest: payload.interest,
-        has_down_payment: payload.has_down_payment,
-        down_payment_value: payload.down_payment_value,
-        purchase_timeline: payload.purchase_timeline,
-        requested_credit_value: payload.raw_answers?.valorCredito,
-        requested_credit_range: payload.raw_answers?.valorCreditoLabel
-      }, { eventID: payload.meta_event_id });
-    }
-
-    function buildLeadPayload() {
-      if (!state.leadEventId) state.leadEventId = createEventId();
-      const tracking = getTrackingParams();
-
-      return {
-        qualified: true,
-        status: "qualified",
-        lead_name: state.nome,
-        whatsapp: state.telefone,
-        whatsapp_digits: onlyDigits(state.telefone),
-        interest: state.interesse,
-        has_down_payment: "Sim",
-        down_payment_value: state.valorEntrada,
-        purchase_timeline: "",
-        source_url: window.location.href,
-        landing_domain: window.location.hostname,
-        user_agent: navigator.userAgent,
-        meta_event_id: state.leadEventId,
-        ...tracking,
-        raw_answers: {
-          nome: state.nome,
-          telefone: state.telefone,
-          interesse: state.interesse,
-          valorEntradaFaixa: state.valorEntradaFaixa,
-          valorEntrada: state.valorEntrada,
-          valorCredito: state.valorCredito,
-          valorCreditoLabel: state.valorCreditoLabel,
-          dataHoraLocal: new Date().toISOString()
-        }
-      };
-    }
-
-    async function postLeadToSupabase(payload) {
-      const functionResponse = await fetch(SUPABASE_FUNCTION_URL, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (functionResponse.ok) return functionResponse.json();
-
-      const errorText = await functionResponse.text();
-      throw new Error(errorText || "Erro ao salvar lead no Supabase");
-    }
-
-    async function saveQualifiedLead() {
-      if (state.leadSaved || state.leadSaving) return;
-
-      if (!isSupabaseConfigured()) {
-        state.leadSaveError = "Supabase anon key ausente";
-        console.warn("Configure SUPABASE_ANON_KEY para salvar leads no Supabase.");
-        return;
-      }
-
-      state.leadSaving = true;
-      try {
-        const payload = buildLeadPayload();
-        await postLeadToSupabase(payload);
-        trackMetaLead(payload);
-        state.leadSaved = true;
-        state.leadSaveError = "";
-      } catch (error) {
-        state.leadSaveError = String(error?.message || error);
-        console.error("Erro ao salvar lead qualificado:", error);
-      } finally {
-        state.leadSaving = false;
-      }
     }
 
     function submitToWhatsapp() {
@@ -2247,7 +2079,6 @@
     */
 
     localStorage.removeItem(LEGACY_STORAGE_KEY);
-    installMetaPixel();
     showScreen(1);
     startLiveCounter();
     startSocialProof();
