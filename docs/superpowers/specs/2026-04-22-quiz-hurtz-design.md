@@ -174,7 +174,7 @@ Não bloqueia a tela de resultado se o webhook falhar.
 ## Visual
 
 - Dark mode padrão: fundo `#0f172a`, cards `#1e293b`, bordas `#334155`
-- Identidade roxo/cyan: primária `#7c3aed`, accent `#06b6d4`
+- Identidade vermelho/cyan: primária `#dc2626`, accent `#06b6d4`
 - Mobile first: Builder empilha verticalmente no mobile
 - Tailwind para tudo, sem CSS custom
 - Ícones: Lucide React

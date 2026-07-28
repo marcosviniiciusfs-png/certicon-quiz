@@ -28,15 +28,15 @@
   <style>
     :root {
       --cor-primaria: #0f172a;
-      --cor-secundaria: #3300fd;
-      --cor-destaque: #3300fd;
-      --cor-acao: #3300fd;
+      --cor-secundaria: #dc2626;
+      --cor-destaque: #dc2626;
+      --cor-acao: #dc2626;
       --cor-fundo: #f3f7fa;
       --cor-card: #ffffff;
       --cor-texto: #0f172a;
       --cor-suave: #64748b;
       --cor-borda: #dce5ee;
-      --cor-soft: #eeebff;
+      --cor-soft: #fee2e2;
       --sombra-card: 0 20px 44px rgba(15, 23, 42, 0.10);
       --raio: 8px;
     }
@@ -51,8 +51,8 @@
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--cor-texto);
       background:
-        radial-gradient(circle at 20% 0%, rgba(51, 0, 253, 0.08), transparent 32%),
-        radial-gradient(circle at 88% 14%, rgba(51, 0, 253, 0.10), transparent 34%),
+        radial-gradient(circle at 20% 0%, rgba(220, 38, 38, 0.08), transparent 32%),
+        radial-gradient(circle at 88% 14%, rgba(220, 38, 38, 0.10), transparent 34%),
         var(--cor-fundo);
       display: block;
       padding: 0;
@@ -113,7 +113,7 @@
       height: 10px;
       border-radius: 50%;
       background: var(--cor-acao);
-      box-shadow: 0 0 0 0 rgba(51, 0, 253, 0.34);
+      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.34);
       animation: livePulse 1.6s ease-out infinite;
       flex: 0 0 auto;
     }
@@ -123,9 +123,9 @@
     }
 
     @keyframes livePulse {
-      0% { box-shadow: 0 0 0 0 rgba(51, 0, 253, 0.34); }
-      70% { box-shadow: 0 0 0 10px rgba(51, 0, 253, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(51, 0, 253, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.34); }
+      70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
     }
 
     .progress-wrap {
@@ -158,7 +158,7 @@
       background: #dde7f0;
       border-radius: 999px;
       overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(51, 0, 253, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.06);
     }
 
     .progress-bar {
@@ -217,7 +217,7 @@
       gap: 8px;
       padding: 8px 12px;
       border-radius: 5px;
-      background: rgba(51, 0, 253, 0.12);
+      background: rgba(220, 38, 38, 0.12);
       color: var(--cor-primaria);
       font-size: 0.72rem;
       font-weight: 800;
@@ -315,7 +315,7 @@
 
     .text-input:focus {
       border-color: var(--cor-secundaria);
-      box-shadow: 0 0 0 5px rgba(51, 0, 253, 0.12);
+      box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.12);
       transform: translateY(-1px);
     }
 
@@ -338,13 +338,13 @@
       color: #ffffff;
       background: var(--cor-secundaria);
       font-weight: 900;
-      box-shadow: 0 14px 26px rgba(51, 0, 253, 0.18);
+      box-shadow: 0 14px 26px rgba(220, 38, 38, 0.18);
       transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px) scale(1.01);
-      box-shadow: 0 18px 34px rgba(51, 0, 253, 0.22);
+      box-shadow: 0 18px 34px rgba(220, 38, 38, 0.22);
       filter: saturate(1.05);
     }
 
@@ -430,7 +430,7 @@
       aspect-ratio: auto;
       object-fit: cover;
       display: block;
-      background: #eeebff;
+      background: #fee2e2;
     }
 
     .interest-body {
@@ -686,7 +686,7 @@
     }
 
     .queue-position strong {
-      background: linear-gradient(90deg, #8f75ff 0%, #5b2cff 48%, #3300fd 100%);
+      background: linear-gradient(90deg, #f87171 0%, #ef4444 48%, #b91c1c 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -703,7 +703,7 @@
       width: 100%;
       margin: 0;
       padding: 16px 18px;
-      border: 1px solid rgba(51, 0, 253, 0.16);
+      border: 1px solid rgba(220, 38, 38, 0.16);
       border-radius: var(--raio);
       background: var(--cor-soft);
       color: var(--cor-primaria);
@@ -731,7 +731,7 @@
       border: 1px solid var(--cor-borda);
       border-radius: var(--raio);
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(241, 250, 246, 0.92));
-      box-shadow: 0 18px 42px rgba(51, 0, 253, 0.08);
+      box-shadow: 0 18px 42px rgba(220, 38, 38, 0.08);
     }
 
     .bar-chart {
@@ -791,7 +791,7 @@
     .analysis-dots span {
       height: 8px;
       border-radius: 8px;
-      background: linear-gradient(90deg, rgba(51, 0, 253, 0.18), rgba(51, 0, 253, 0.88));
+      background: linear-gradient(90deg, rgba(220, 38, 38, 0.18), rgba(220, 38, 38, 0.88));
       transform-origin: left;
       animation: scan-dot 1.2s ease-in-out infinite;
     }
@@ -995,13 +995,13 @@
     }
 
     .analysis-step.is-done {
-      border-color: #d8d0ff;
-      background: #fdfcff;
+      border-color: #fecaca;
+      background: #fffafa;
       transform: translateY(-1px);
     }
 
     .analysis-step.is-done .analysis-step-icon {
-      background: #eeebff;
+      background: #fee2e2;
       color: var(--cor-secundaria);
     }
 
@@ -1051,7 +1051,7 @@
       margin: 0;
       padding: 16px;
       border-radius: var(--raio);
-      background: #f7f5ff;
+      background: #fff5f5;
       border: 1px solid var(--cor-borda);
       color: var(--cor-primaria);
       font-weight: 700;
@@ -1097,7 +1097,7 @@
       border: 1px solid rgba(216, 231, 223, 0.9);
       border-radius: var(--raio);
       background: rgba(255, 255, 255, 0.94);
-      box-shadow: 0 18px 44px rgba(51, 0, 253, 0.16);
+      box-shadow: 0 18px 44px rgba(220, 38, 38, 0.16);
       color: var(--cor-primaria);
       opacity: 0;
       pointer-events: none;
@@ -1131,7 +1131,7 @@
       display: grid;
       place-items: center;
       border-radius: var(--raio);
-      background: rgba(51, 0, 253, 0.12);
+      background: rgba(220, 38, 38, 0.12);
       position: relative;
       overflow: hidden;
     }
@@ -2095,7 +2095,7 @@
       const confetti = document.getElementById("confetti");
       if (confetti.dataset.ready) return;
 
-      const colors = ["#f7c948", "#3300fd", "#ff7a59", "#5b2cff", "#8f75ff"];
+      const colors = ["#f7c948", "#dc2626", "#ff7a59", "#b91c1c", "#f87171"];
       const pieces = Array.from({ length: 26 }, (_, index) => {
         const piece = document.createElement("span");
         piece.style.left = `${Math.random() * 100}%`;
