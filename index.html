@@ -2107,7 +2107,8 @@
         updateAudioButton(video);
       });
 
-      truckSlides = allTruckSlides.filter((slide) => slide.dataset.showcaseInterest === interest);
+      const showcaseInterest = interest === "Maquinário" ? "Caminhão" : interest;
+      truckSlides = allTruckSlides.filter((slide) => slide.dataset.showcaseInterest === showcaseInterest);
       truckDots = truckSlides.map((_, index) => {
         const dot = document.createElement("button");
         dot.className = "truck-carousel-dot";
@@ -2121,7 +2122,7 @@
     }
 
     function updateTruckShowcase(screenIndex) {
-      const shouldShow = screenIndex === 9 && ["Caminhão", "Imóvel", "Carro"].includes(state.interesse);
+      const shouldShow = screenIndex === 9 && ["Caminhão", "Imóvel", "Carro", "Maquinário"].includes(state.interesse);
       defaultResultHeader.hidden = shouldShow;
       truckShowcase.hidden = !shouldShow;
 
