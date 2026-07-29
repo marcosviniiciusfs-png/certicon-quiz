@@ -1780,6 +1780,12 @@
             <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
               <img src="./assets/contemplados/imovel-foto-01.jpg" alt="Clientes contemplados com imóvel pela Certicon" loading="lazy">
             </article>
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Carro" aria-hidden="true">
+              <img src="./assets/contemplados/carro-foto-01.jpg" alt="Cliente contemplado com veículo pela Certicon" loading="lazy">
+            </article>
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Carro" aria-hidden="true">
+              <img src="./assets/contemplados/carro-foto-02.jpg" alt="Cliente contemplado com veículo pela Certicon" loading="lazy">
+            </article>
             <button class="truck-carousel-arrow prev" type="button" data-truck-prev aria-label="Mídia anterior">‹</button>
             <button class="truck-carousel-arrow next" type="button" data-truck-next aria-label="Próxima mídia">›</button>
           </div>
@@ -2115,7 +2121,7 @@
     }
 
     function updateTruckShowcase(screenIndex) {
-      const shouldShow = screenIndex === 9 && ["Caminhão", "Imóvel"].includes(state.interesse);
+      const shouldShow = screenIndex === 9 && ["Caminhão", "Imóvel", "Carro"].includes(state.interesse);
       defaultResultHeader.hidden = shouldShow;
       truckShowcase.hidden = !shouldShow;
 
