@@ -10,10 +10,10 @@
   <meta property="og:title" content="Certicon | Simulação de Crédito" />
   <meta property="og:description" content="Responda ao quiz e fale com um especialista em crédito." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://certicon-quiz.hurtz-assistente.workers.dev/" />
+  <meta property="og:url" content="https://certiconquiz.simulead.com.br/" />
   <meta property="og:site_name" content="Certicon" />
-  <meta property="og:image" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
-  <meta property="og:image:secure_url" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
+  <meta property="og:image" content="https://certiconquiz.simulead.com.br/assets/contemplados/cliente-foto-02.jpg" />
+  <meta property="og:image:secure_url" content="https://certiconquiz.simulead.com.br/assets/contemplados/cliente-foto-02.jpg" />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="720" />
   <meta property="og:image:height" content="720" />
@@ -21,7 +21,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Certicon | Simulação de Crédito" />
   <meta name="twitter:description" content="Responda ao quiz e fale com um especialista em crédito." />
-  <meta name="twitter:image" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
+  <meta name="twitter:image" content="https://certiconquiz.simulead.com.br/assets/contemplados/cliente-foto-02.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -1779,6 +1779,8 @@
 
   <script>
     const WHATSAPP_NUMERO = "55XXXXXXXXXXX";
+    const CLOUDFLARE_LEADS_API = "https://certicon-quiz.hurtz-assistente.workers.dev/api/leads";
+    const LEADS_API_URL = window.location.hostname.endsWith("workers.dev") ? "/api/leads" : CLOUDFLARE_LEADS_API;
     const LEGACY_STORAGE_KEY = "quiz-hurtz-lead-progress";
     const PENDING_LEADS_KEY = "certicon-pending-leads";
     const SOCIAL_PROOF_FIRST_DELAY_MS = 5000;
@@ -1951,7 +1953,7 @@
     }
 
     async function sendLeadToCloudflare(payload) {
-      const response = await fetch("/api/leads", {
+      const response = await fetch(LEADS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -28,15 +28,6 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Write runtime config
-        run: |
-          cat > config.js <<'EOF'
-          window.QUIZ_CONFIG = {
-            SUPABASE_URL: "${{ vars.SUPABASE_URL }}",
-            SUPABASE_ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}"
-          };
-          EOF
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -1,4 +1,17 @@
 const ALLOWED_INTERESTS = new Set(["Imóvel", "Carro", "Caminhão", "Maquinário"]);
+const ALLOWED_ORIGINS = new Set([
+  "https://certiconquiz.simulead.com.br",
+  "http://certiconquiz.simulead.com.br",
+  "https://certicon-quiz.hurtz-assistente.workers.dev",
+  "http://localhost:8090",
+  "http://127.0.0.1:8090"
+]);
+const ALLOWED_SOURCE_HOSTS = new Set([
+  "certiconquiz.simulead.com.br",
+  "certicon-quiz.hurtz-assistente.workers.dev",
+  "localhost",
+  "127.0.0.1"
+]);
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -21,11 +34,26 @@ function cleanInteger(value) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 }
 
-function validSourceUrl(value, requestUrl) {
+function corsHeaders(request) {
+  const origin = request.headers.get("origin") || "";
+  if (!ALLOWED_ORIGINS.has(origin)) return {};
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin"
+  };
+}
+
+function apiJson(request, data, status = 200, extraHeaders = {}) {
+  return json(data, status, { ...corsHeaders(request), ...extraHeaders });
+}
+
+function validSourceUrl(value) {
   try {
     const source = new URL(value);
-    const request = new URL(requestUrl);
-    return source.hostname === request.hostname || request.hostname === "localhost";
+    return ALLOWED_SOURCE_HOSTS.has(source.hostname);
   } catch {
     return false;
   }
@@ -34,23 +62,23 @@ function validSourceUrl(value, requestUrl) {
 async function saveLead(request, env) {
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
-    return json({ ok: false, error: "Content-Type inválido" }, 415);
+    return apiJson(request, { ok: false, error: "Content-Type inválido" }, 415);
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > 24_000) {
-    return json({ ok: false, error: "Payload muito grande" }, 413);
+    return apiJson(request, { ok: false, error: "Payload muito grande" }, 413);
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return json({ ok: false, error: "JSON inválido" }, 400);
+    return apiJson(request, { ok: false, error: "JSON inválido" }, 400);
   }
 
   if (cleanText(body.website, 80)) {
-    return json({ ok: true, stored: false });
+    return apiJson(request, { ok: true, stored: false });
   }
 
   const id = cleanText(body.id, 80);
@@ -61,13 +89,13 @@ async function saveLead(request, env) {
   const sourceUrl = cleanText(body.source_url, 700);
 
   if (!/^[a-zA-Z0-9-]{16,80}$/.test(id)) {
-    return json({ ok: false, error: "Identificador inválido" }, 400);
+    return apiJson(request, { ok: false, error: "Identificador inválido" }, 400);
   }
   if (leadName.length < 2 || whatsappDigits.length < 10 || !ALLOWED_INTERESTS.has(interest)) {
-    return json({ ok: false, error: "Dados obrigatórios inválidos" }, 400);
+    return apiJson(request, { ok: false, error: "Dados obrigatórios inválidos" }, 400);
   }
-  if (!validSourceUrl(sourceUrl, request.url)) {
-    return json({ ok: false, error: "Origem inválida" }, 400);
+  if (!validSourceUrl(sourceUrl)) {
+    return apiJson(request, { ok: false, error: "Origem inválida" }, 400);
   }
 
   const payload = {
@@ -118,7 +146,7 @@ async function saveLead(request, env) {
     JSON.stringify(body)
   ).run();
 
-  return json({ ok: true, stored: result.meta.changes > 0, duplicate: result.meta.changes === 0, id });
+  return apiJson(request, { ok: true, stored: result.meta.changes > 0, duplicate: result.meta.changes === 0, id });
 }
 
 export default {
@@ -126,15 +154,22 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/leads") {
+      const origin = request.headers.get("origin");
+      if (origin && !ALLOWED_ORIGINS.has(origin)) {
+        return json({ ok: false, error: "Origem não permitida" }, 403);
+      }
+      if (request.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers: corsHeaders(request) });
+      }
       if (request.method === "POST") {
         try {
           return await saveLead(request, env);
         } catch (error) {
           console.error("Falha ao armazenar lead no D1", error);
-          return json({ ok: false, error: "Não foi possível armazenar o lead" }, 500);
+          return apiJson(request, { ok: false, error: "Não foi possível armazenar o lead" }, 500);
         }
       }
-      return json({ ok: false, error: "Método não permitido" }, 405, { Allow: "POST" });
+      return apiJson(request, { ok: false, error: "Método não permitido" }, 405, { Allow: "POST, OPTIONS" });
     }
 
     return env.ASSETS.fetch(request);
