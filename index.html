@@ -851,18 +851,37 @@
       text-align: center;
     }
 
-    .contact-wait {
+    .contact-whatsapp {
       width: 100%;
       margin: 0;
       padding: 16px 18px;
-      border: 1px solid rgba(220, 38, 38, 0.16);
+      border: 1px solid #15803d;
       border-radius: var(--raio);
-      background: var(--cor-soft);
-      color: var(--cor-primaria);
-      font-size: 0.95rem;
-      font-weight: 800;
+      background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+      color: #ffffff;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 900;
       line-height: 1.45;
       text-align: center;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(21, 128, 61, 0.22);
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .contact-whatsapp:hover {
+      filter: brightness(1.04);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px rgba(21, 128, 61, 0.28);
+    }
+
+    .contact-whatsapp:active {
+      transform: translateY(0);
+    }
+
+    .contact-whatsapp:focus-visible {
+      outline: 3px solid rgba(34, 197, 94, 0.32);
+      outline-offset: 3px;
     }
 
     .analysis-panel {
@@ -1794,7 +1813,7 @@
         <h1 id="resultTitle">Parabéns! Logo mais você será atendido por um especialista.</h1>
         <p class="status-note queue-position">Seu perfil recebeu <strong>prioridade no atendimento</strong>.</p>
         <div class="lead-summary" id="leadSummary"></div>
-        <p class="contact-wait">Aguarde. Um especialista entrará em contato com você pelo WhatsApp.</p>
+        <button class="contact-whatsapp" type="button" data-contact-whatsapp>Falar com um atendente</button>
       </div>
 
       <div class="screen" data-screen="10">
@@ -1814,7 +1833,7 @@
   </main>
 
   <script>
-    const WHATSAPP_NUMERO = "55XXXXXXXXXXX";
+    const WHATSAPP_NUMERO = "553541410514";
     const CLOUDFLARE_LEADS_API = "https://certicon-quiz.hurtz-assistente.workers.dev/api/leads";
     const LEADS_API_URL = window.location.hostname.endsWith("workers.dev") ? "/api/leads" : CLOUDFLARE_LEADS_API;
     const LEGACY_STORAGE_KEY = "quiz-hurtz-lead-progress";
@@ -2297,24 +2316,11 @@
     }
 
     function buildWhatsappMessage() {
-      const entrada = state.valorEntradaFaixa || "Não informado";
-      const credito = state.valorCreditoLabel || formatCurrency(state.valorCredito);
-      return [
-        "Olá! Acabei de responder o quiz de qualificação e quero falar com um especialista.",
-        "",
-        `Nome: ${state.nome}`,
-        `WhatsApp informado: ${state.telefone}`,
-        `Interesse: ${state.interesse}`,
-        `Valor de crédito desejado: ${credito}`,
-        `Entrada disponível: ${entrada}`,
-        "",
-        "Pode me chamar para uma simulação?"
-      ].join("\n");
+      const interesse = (state.interesse || "crédito").toLocaleLowerCase("pt-BR");
+      return `Olá! Tenho interesse no crédito para ${interesse}`;
     }
 
     function submitToWhatsapp() {
-      if (!validatePhone()) return;
-
       const message = encodeURIComponent(buildWhatsappMessage());
       const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${message}`;
       window.location.href = url;
@@ -2427,6 +2433,7 @@
     }
 
     document.querySelector("[data-close-page]").addEventListener("click", closePage);
+    document.querySelector("[data-contact-whatsapp]").addEventListener("click", submitToWhatsapp);
     document.addEventListener("pointerdown", enableAudioNotice, { once: true });
     document.addEventListener("keydown", enableAudioNotice, { once: true });
 
