@@ -17,7 +17,11 @@
     }
   ],
   "vars": {
-    "META_PIXEL_ID": "2095584267906662"
+    "META_PIXEL_ID": "2095584267906662",
+    "CRM_WEBHOOK_URL": "https://app.convexcrm.com.br/api/webhooks/integrations/13f5b44cfe0e450fbf7d12f9a83a28a3"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
   },
   "observability": {
     "enabled": true

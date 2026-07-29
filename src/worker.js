@@ -50,6 +50,130 @@ async function sha256(value) {
     .join("");
 }
 
+function crmInterest(value) {
+  const normalized = cleanText(value, 40)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+  const types = {
+    IMOVEL: "IMOVEL",
+    CARRO: "CARRO",
+    CAMINHAO: "CAMINHAO",
+    MAQUINARIO: "MAQUINARIO"
+  };
+  return types[normalized] || normalized;
+}
+
+function crmPayload(payload) {
+  return {
+    nome: payload.leadName,
+    telefone: payload.whatsappDigits,
+    tipo: crmInterest(payload.interest),
+    entrada: payload.downPaymentRange,
+    credito: payload.requestedCreditRange
+  };
+}
+
+async function sendCrmLead(env, payload) {
+  if (!env.CRM_AUTH_TOKEN || !env.CRM_WEBHOOK_URL) {
+    const message = "CRM credentials are not configured";
+    await env.DB.prepare(`
+      UPDATE leads
+      SET crm_status = 'not_configured',
+          crm_attempts = crm_attempts + 1,
+          crm_last_attempt_at = CURRENT_TIMESTAMP,
+          crm_last_error = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND crm_status != 'sent'
+    `).bind(message, payload.id).run();
+    return { status: "not_configured" };
+  }
+
+  try {
+    const response = await fetch(env.CRM_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.CRM_AUTH_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(crmPayload(payload))
+    });
+    const responseText = (await response.text()).slice(0, 4000);
+    let externalId = null;
+    try {
+      const parsed = JSON.parse(responseText);
+      externalId = cleanText(
+        parsed?.id || parsed?.lead_id || parsed?.data?.id || parsed?.data?.lead_id,
+        255
+      ) || null;
+    } catch {
+      // A resposta do CRM pode não ser JSON.
+    }
+    const status = response.ok ? "sent" : "failed";
+
+    await env.DB.prepare(`
+      UPDATE leads
+      SET crm_status = ?,
+          crm_attempts = crm_attempts + 1,
+          crm_last_attempt_at = CURRENT_TIMESTAMP,
+          crm_last_error = ?,
+          crm_external_id = COALESCE(?, crm_external_id),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND crm_status != 'sent'
+    `).bind(
+      status,
+      response.ok ? null : `${response.status}: ${responseText}`,
+      externalId,
+      payload.id
+    ).run();
+
+    return { status };
+  } catch (error) {
+    const message = cleanText(error?.message || error, 1000);
+    await env.DB.prepare(`
+      UPDATE leads
+      SET crm_status = 'failed',
+          crm_attempts = crm_attempts + 1,
+          crm_last_attempt_at = CURRENT_TIMESTAMP,
+          crm_last_error = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND crm_status != 'sent'
+    `).bind(message, payload.id).run();
+    return { status: "failed" };
+  }
+}
+
+function payloadFromLead(row) {
+  return {
+    id: row.id,
+    leadName: row.lead_name,
+    whatsappDigits: row.whatsapp_digits,
+    interest: row.interest,
+    downPaymentRange: row.down_payment_range || "",
+    requestedCreditRange: row.requested_credit_range || ""
+  };
+}
+
+async function retryPendingCrmLeads(env) {
+  const { results = [] } = await env.DB.prepare(`
+    SELECT id, lead_name, whatsapp_digits, interest,
+           down_payment_range, requested_credit_range
+    FROM leads
+    WHERE crm_status IN ('pending', 'failed', 'not_configured')
+      AND crm_attempts < 12
+      AND (
+        crm_last_attempt_at IS NULL
+        OR datetime(crm_last_attempt_at) <= datetime('now', '-5 minutes')
+      )
+    ORDER BY created_at ASC
+    LIMIT 25
+  `).all();
+
+  for (const row of results) {
+    await sendCrmLead(env, payloadFromLead(row));
+  }
+}
+
 async function sendMetaLead(request, env, body, payload) {
   const eventId = payload.id;
   const nameParts = payload.leadName.trim().split(/\s+/);
@@ -256,9 +380,14 @@ async function saveLead(request, env) {
   ).run();
 
   let metaCapiStatus = "duplicate";
+  let crmStatus = "duplicate";
   if (result.meta.changes > 0) {
-    const metaResult = await sendMetaLead(request, env, body, payload);
+    const [metaResult, crmResult] = await Promise.all([
+      sendMetaLead(request, env, body, payload),
+      sendCrmLead(env, payload)
+    ]);
     metaCapiStatus = metaResult.status;
+    crmStatus = crmResult.status;
   }
 
   return apiJson(request, {
@@ -266,6 +395,7 @@ async function saveLead(request, env) {
     stored: result.meta.changes > 0,
     duplicate: result.meta.changes === 0,
     meta_capi_status: metaCapiStatus,
+    crm_status: crmStatus,
     id
   });
 }
@@ -294,5 +424,9 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+  },
+
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(retryPendingCrmLeads(env));
   }
 };
