@@ -26,6 +26,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>
+    !function(f,b,e,v,n,t,s) {
+      if (f.fbq) return;
+      n = f.fbq = function() {
+        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+      };
+      if (!f._fbq) f._fbq = n;
+      n.push = n;
+      n.loaded = true;
+      n.version = "2.0";
+      n.queue = [];
+      t = b.createElement(e);
+      t.async = true;
+      t.src = v;
+      s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s);
+    }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", "2095584267906662");
+    fbq("track", "PageView");
+  </script>
   <style>
     :root {
       --cor-primaria: #0f172a;
@@ -1547,6 +1567,9 @@
   </style>
 </head>
 <body>
+  <noscript>
+    <img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=2095584267906662&ev=PageView&noscript=1">
+  </noscript>
   <main class="app">
     <header class="app-top">
       <div class="live-proof" aria-live="polite">
@@ -1914,13 +1937,29 @@
 
     function getCampaignParams() {
       const params = new URLSearchParams(window.location.search);
+      const fbclid = params.get("fbclid") || "";
+      const fbc = getCookie("_fbc") || (fbclid ? `fb.1.${Date.now()}.${fbclid}` : "");
       return {
         utm_source: params.get("utm_source") || "",
         utm_medium: params.get("utm_medium") || "",
         utm_campaign: params.get("utm_campaign") || "",
         utm_content: params.get("utm_content") || "",
-        utm_term: params.get("utm_term") || ""
+        utm_term: params.get("utm_term") || "",
+        fbclid,
+        fbp: getCookie("_fbp"),
+        fbc,
+        user_agent: navigator.userAgent
       };
+    }
+
+    function getCookie(name) {
+      return document.cookie
+        .split(";")
+        .map((item) => item.trim())
+        .find((item) => item.startsWith(`${name}=`))
+        ?.split("=")
+        .slice(1)
+        .join("=") || "";
     }
 
     function readPendingLeads() {
@@ -1986,6 +2025,15 @@
       if (state.leadQueued) return;
       state.leadQueued = true;
       const payload = buildLeadPayload();
+      if (typeof window.fbq === "function") {
+        window.fbq("track", "Lead", {
+          content_name: "Quiz Certicon",
+          content_category: "credito",
+          interest: payload.interest,
+          requested_credit_value: payload.requested_credit_value,
+          down_payment_value: payload.down_payment_value
+        }, { eventID: payload.id });
+      }
       const pending = readPendingLeads().filter((lead) => lead.id !== payload.id);
       pending.push(payload);
       writePendingLeads(pending);

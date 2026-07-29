@@ -16,6 +16,9 @@
       "migrations_dir": "migrations"
     }
   ],
+  "vars": {
+    "META_PIXEL_ID": "2095584267906662"
+  },
   "observability": {
     "enabled": true
   }

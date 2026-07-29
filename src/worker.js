@@ -34,6 +34,115 @@ function cleanInteger(value) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 }
 
+function normalizeForHash(value) {
+  return cleanText(value, 180)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function sendMetaLead(request, env, body, payload) {
+  const eventId = payload.id;
+  const nameParts = payload.leadName.trim().split(/\s+/);
+  const firstName = normalizeForHash(nameParts[0] || "");
+  const lastName = normalizeForHash(nameParts.slice(1).join(""));
+  const phoneWithCountry = payload.whatsappDigits.startsWith("55")
+    ? payload.whatsappDigits
+    : `55${payload.whatsappDigits}`;
+
+  if (!env.META_ACCESS_TOKEN || !env.META_PIXEL_ID) {
+    await env.DB.prepare(`
+      UPDATE leads
+      SET meta_event_id = ?, meta_capi_status = 'not_configured',
+          meta_capi_attempts = meta_capi_attempts + 1,
+          meta_capi_error = 'Meta credentials are not configured',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(eventId, payload.id).run();
+    return { status: "not_configured" };
+  }
+
+  const userData = {
+    ph: [await sha256(phoneWithCountry)],
+    external_id: [await sha256(payload.id)],
+    client_ip_address: request.headers.get("CF-Connecting-IP") || undefined,
+    client_user_agent: cleanText(body.user_agent, 700) || request.headers.get("User-Agent") || undefined,
+    fbp: cleanText(body.fbp, 255) || undefined,
+    fbc: cleanText(body.fbc, 255) || undefined
+  };
+  if (firstName) userData.fn = [await sha256(firstName)];
+  if (lastName) userData.ln = [await sha256(lastName)];
+
+  const metaPayload = {
+    data: [{
+      event_name: "Lead",
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: eventId,
+      event_source_url: payload.sourceUrl,
+      action_source: "website",
+      user_data: userData,
+      custom_data: {
+        content_name: "Quiz Certicon",
+        content_category: "credito",
+        interest: payload.interest,
+        requested_credit_value: payload.requestedCreditValue,
+        down_payment_value: payload.downPaymentValue
+      }
+    }]
+  };
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${env.META_PIXEL_ID}/events`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.META_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(metaPayload)
+    });
+    const responseText = (await response.text()).slice(0, 4000);
+    const status = response.ok ? "sent" : "failed";
+
+    await env.DB.prepare(`
+      UPDATE leads
+      SET meta_event_id = ?, meta_capi_status = ?,
+          meta_capi_attempts = meta_capi_attempts + 1,
+          meta_capi_sent_at = CASE WHEN ? = 'sent' THEN CURRENT_TIMESTAMP ELSE meta_capi_sent_at END,
+          meta_capi_response = ?, meta_capi_error = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      eventId,
+      status,
+      status,
+      response.ok ? responseText : null,
+      response.ok ? null : responseText,
+      payload.id
+    ).run();
+
+    return { status };
+  } catch (error) {
+    const message = cleanText(error?.message || error, 1000);
+    await env.DB.prepare(`
+      UPDATE leads
+      SET meta_event_id = ?, meta_capi_status = 'failed',
+          meta_capi_attempts = meta_capi_attempts + 1,
+          meta_capi_error = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(eventId, message, payload.id).run();
+    return { status: "failed" };
+  }
+}
+
 function corsHeaders(request) {
   const origin = request.headers.get("origin") || "";
   if (!ALLOWED_ORIGINS.has(origin)) return {};
@@ -146,7 +255,19 @@ async function saveLead(request, env) {
     JSON.stringify(body)
   ).run();
 
-  return apiJson(request, { ok: true, stored: result.meta.changes > 0, duplicate: result.meta.changes === 0, id });
+  let metaCapiStatus = "duplicate";
+  if (result.meta.changes > 0) {
+    const metaResult = await sendMetaLead(request, env, body, payload);
+    metaCapiStatus = metaResult.status;
+  }
+
+  return apiJson(request, {
+    ok: true,
+    stored: result.meta.changes > 0,
+    duplicate: result.meta.changes === 0,
+    meta_capi_status: metaCapiStatus,
+    id
+  });
 }
 
 export default {
