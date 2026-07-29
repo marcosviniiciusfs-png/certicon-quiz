@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "certicon-quiz",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-07-29",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "certicon-quiz-leads",
+      "database_id": "3ab53a8c-8d33-4e37-a5fc-2ac24b0ec877",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Áurea Créditos</title>
+  <title>Certicon | Simulação de Crédito</title>
   <link rel="icon" type="image/png" sizes="64x64" href="./assets/brand/favicon-64.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/brand/apple-touch-icon.png">
-  <meta name="description" content="Descubra em 1 minuto se você está pré-qualificado para simular crédito com a Áurea Soluções Financeiras." />
-  <meta property="og:title" content="Áurea Créditos | Soluções Financeiras" />
+  <meta name="description" content="Descubra em 1 minuto se você está pré-qualificado para simular crédito com a Certicon." />
+  <meta property="og:title" content="Certicon | Simulação de Crédito" />
   <meta property="og:description" content="Responda ao quiz e fale com um especialista em crédito." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://aurea.simulead.com.br/" />
-  <meta property="og:site_name" content="Áurea Créditos" />
-  <meta property="og:image" content="https://aurea.simulead.com.br/assets/brand/social-preview.png" />
-  <meta property="og:image:secure_url" content="https://aurea.simulead.com.br/assets/brand/social-preview.png" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1080" />
-  <meta property="og:image:height" content="1080" />
-  <meta property="og:image:alt" content="Áurea Soluções Financeiras" />
+  <meta property="og:url" content="https://certicon-quiz.hurtz-assistente.workers.dev/" />
+  <meta property="og:site_name" content="Certicon" />
+  <meta property="og:image" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
+  <meta property="og:image:secure_url" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="720" />
+  <meta property="og:image:height" content="720" />
+  <meta property="og:image:alt" content="Cliente contemplado da Certicon" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Áurea Créditos | Soluções Financeiras" />
+  <meta name="twitter:title" content="Certicon | Simulação de Crédito" />
   <meta name="twitter:description" content="Responda ao quiz e fale com um especialista em crédito." />
-  <meta name="twitter:image" content="https://aurea.simulead.com.br/assets/brand/social-preview.png" />
+  <meta name="twitter:image" content="https://certicon-quiz.hurtz-assistente.workers.dev/assets/contemplados/cliente-foto-02.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -1780,6 +1780,7 @@
   <script>
     const WHATSAPP_NUMERO = "55XXXXXXXXXXX";
     const LEGACY_STORAGE_KEY = "quiz-hurtz-lead-progress";
+    const PENDING_LEADS_KEY = "certicon-pending-leads";
     const SOCIAL_PROOF_FIRST_DELAY_MS = 5000;
     const SOCIAL_PROOF_REPEAT_MS = 7000;
     const SOCIAL_PROOF_VISIBLE_MS = 5000;
@@ -1801,7 +1802,9 @@
       valorEntrada: 0,
       valorCredito: 0,
       valorCreditoLabel: "",
-      telefone: ""
+      telefone: "",
+      leadId: "",
+      leadQueued: false
     };
 
     const screens = Array.from(document.querySelectorAll(".screen"));
@@ -1900,6 +1903,91 @@
       window.history.replaceState({ screen: index }, "", url.toString());
     }
 
+    function createLeadId() {
+      if (window.crypto?.randomUUID) return crypto.randomUUID();
+      return `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function getCampaignParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        utm_source: params.get("utm_source") || "",
+        utm_medium: params.get("utm_medium") || "",
+        utm_campaign: params.get("utm_campaign") || "",
+        utm_content: params.get("utm_content") || "",
+        utm_term: params.get("utm_term") || ""
+      };
+    }
+
+    function readPendingLeads() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(PENDING_LEADS_KEY) || "[]");
+        return Array.isArray(stored) ? stored.slice(-20) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writePendingLeads(leads) {
+      localStorage.setItem(PENDING_LEADS_KEY, JSON.stringify(leads.slice(-20)));
+    }
+
+    function buildLeadPayload() {
+      if (!state.leadId) state.leadId = createLeadId();
+      return {
+        id: state.leadId,
+        lead_name: state.nome,
+        whatsapp: state.telefone,
+        interest: state.interesse,
+        down_payment_range: state.valorEntradaFaixa,
+        down_payment_value: state.valorEntrada,
+        requested_credit_range: state.valorCreditoLabel,
+        requested_credit_value: state.valorCredito,
+        source_url: window.location.href,
+        referrer: document.referrer,
+        website: "",
+        ...getCampaignParams()
+      };
+    }
+
+    async function sendLeadToCloudflare(payload) {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Falha ao salvar lead");
+      }
+    }
+
+    async function flushPendingLeads() {
+      const pending = readPendingLeads();
+      if (!pending.length) return;
+
+      const remaining = [];
+      for (const payload of pending) {
+        try {
+          await sendLeadToCloudflare(payload);
+        } catch {
+          remaining.push(payload);
+        }
+      }
+      writePendingLeads(remaining);
+    }
+
+    function queueQualifiedLead() {
+      if (state.leadQueued) return;
+      state.leadQueued = true;
+      const payload = buildLeadPayload();
+      const pending = readPendingLeads().filter((lead) => lead.id !== payload.id);
+      pending.push(payload);
+      writePendingLeads(pending);
+      flushPendingLeads();
+    }
+
     function updateAudioButton(video) {
       const button = video.closest(".truck-slide")?.querySelector("[data-audio-toggle]");
       if (!button) return;
@@ -1985,6 +2073,7 @@
       updateTruckShowcase(index);
       if (index === 8) {
         startAnalysisProgress();
+        queueQualifiedLead();
         analysisTimer = window.setTimeout(() => showScreen(9), 5000);
       }
       if (index === 9) {
@@ -2342,6 +2431,7 @@
     */
 
     localStorage.removeItem(LEGACY_STORAGE_KEY);
+    flushPendingLeads();
     showScreen(1);
     startLiveCounter();
     startSocialProof();
