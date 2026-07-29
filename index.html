@@ -1756,29 +1756,31 @@
         </div>
         <section class="truck-showcase" id="truckShowcase" aria-label="Clientes contemplados" hidden>
           <div class="truck-carousel" id="truckCarousel">
-            <article class="truck-slide is-active" data-truck-slide aria-hidden="false">
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <video src="./assets/contemplados/cliente-video-01.mp4" muted playsinline autoplay preload="metadata"></video>
               <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
             </article>
-            <article class="truck-slide" data-truck-slide aria-hidden="true">
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <img src="./assets/contemplados/cliente-foto-01.jpg" alt="Cliente contemplado da Certicon" loading="lazy">
             </article>
-            <article class="truck-slide" data-truck-slide aria-hidden="true">
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <video src="./assets/contemplados/cliente-video-02.mp4" muted playsinline autoplay preload="metadata"></video>
               <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
             </article>
-            <article class="truck-slide" data-truck-slide aria-hidden="true">
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <img src="./assets/contemplados/cliente-foto-02.jpg" alt="Cliente contemplado da Certicon" loading="lazy">
+            </article>
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
+              <video src="./assets/contemplados/imovel-video-01.mp4" muted playsinline autoplay preload="metadata"></video>
+              <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
+            </article>
+            <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
+              <video src="./assets/contemplados/imovel-video-02.mp4" muted playsinline autoplay preload="metadata"></video>
             </article>
             <button class="truck-carousel-arrow prev" type="button" data-truck-prev aria-label="Mídia anterior">‹</button>
             <button class="truck-carousel-arrow next" type="button" data-truck-next aria-label="Próxima mídia">›</button>
           </div>
-          <div class="truck-carousel-dots" aria-label="Escolher mídia">
-            <button class="truck-carousel-dot is-active" type="button" data-truck-dot="0" aria-label="Exibir mídia 1"></button>
-            <button class="truck-carousel-dot" type="button" data-truck-dot="1" aria-label="Exibir mídia 2"></button>
-            <button class="truck-carousel-dot" type="button" data-truck-dot="2" aria-label="Exibir mídia 3"></button>
-            <button class="truck-carousel-dot" type="button" data-truck-dot="3" aria-label="Exibir mídia 4"></button>
-          </div>
+          <div class="truck-carousel-dots" id="truckCarouselDots" aria-label="Escolher mídia"></div>
         </section>
         <h1 id="resultTitle">Parabéns! Logo mais você será atendido por um especialista.</h1>
         <p class="status-note queue-position">Seu perfil recebeu <strong>prioridade no atendimento</strong>.</p>
@@ -1848,8 +1850,8 @@
     const socialProofText = document.getElementById("socialProofText");
     const defaultResultHeader = document.getElementById("defaultResultHeader");
     const truckShowcase = document.getElementById("truckShowcase");
-    const truckSlides = Array.from(document.querySelectorAll("[data-truck-slide]"));
-    const truckDots = Array.from(document.querySelectorAll("[data-truck-dot]"));
+    const allTruckSlides = Array.from(document.querySelectorAll("[data-truck-slide]"));
+    const truckDotsContainer = document.getElementById("truckCarouselDots");
     const analysisPercentNumber = document.getElementById("analysisPercentNumber");
     const analysisRingProgress = document.getElementById("analysisRingProgress");
     let socialProofIndex = 0;
@@ -1859,6 +1861,8 @@
     let analysisTimer;
     let analysisProgressTimer;
     let analysisStepTimers = [];
+    let truckSlides = [];
+    let truckDots = [];
     let truckSlideIndex = 0;
     let truckCarouselTimer;
     let audioReady = false;
@@ -2082,18 +2086,44 @@
       scheduleTruckSlide();
     }
 
+    function prepareShowcaseForInterest(interest) {
+      allTruckSlides.forEach((slide) => {
+        slide.classList.remove("is-active");
+        slide.setAttribute("aria-hidden", "true");
+        const video = slide.querySelector("video");
+        if (!video) return;
+        video.pause();
+        video.currentTime = 0;
+        video.muted = true;
+        updateAudioButton(video);
+      });
+
+      truckSlides = allTruckSlides.filter((slide) => slide.dataset.showcaseInterest === interest);
+      truckDots = truckSlides.map((_, index) => {
+        const dot = document.createElement("button");
+        dot.className = "truck-carousel-dot";
+        dot.type = "button";
+        dot.dataset.truckDot = String(index);
+        dot.setAttribute("aria-label", `Exibir mídia ${index + 1}`);
+        dot.addEventListener("click", () => showTruckSlide(index));
+        return dot;
+      });
+      truckDotsContainer.replaceChildren(...truckDots);
+    }
+
     function updateTruckShowcase(screenIndex) {
-      const shouldShow = screenIndex === 9 && state.interesse === "Caminhão";
+      const shouldShow = screenIndex === 9 && ["Caminhão", "Imóvel"].includes(state.interesse);
       defaultResultHeader.hidden = shouldShow;
       truckShowcase.hidden = !shouldShow;
 
       if (shouldShow) {
+        prepareShowcaseForInterest(state.interesse);
         showTruckSlide(0);
         return;
       }
 
       window.clearTimeout(truckCarouselTimer);
-      truckSlides.forEach((slide) => {
+      allTruckSlides.forEach((slide) => {
         const video = slide.querySelector("video");
         if (!video) return;
         video.pause();
@@ -2402,16 +2432,12 @@
       showTruckSlide(truckSlideIndex + 1);
     });
 
-    truckDots.forEach((dot) => {
-      dot.addEventListener("click", () => showTruckSlide(Number(dot.dataset.truckDot)));
-    });
-
     document.querySelectorAll("[data-audio-toggle]").forEach((button) => {
       button.addEventListener("click", () => {
         const video = button.closest(".truck-slide")?.querySelector("video");
         if (!video) return;
 
-        truckSlides.forEach((slide) => {
+        allTruckSlides.forEach((slide) => {
           const otherVideo = slide.querySelector("video");
           if (!otherVideo || otherVideo === video) return;
           otherVideo.muted = true;
