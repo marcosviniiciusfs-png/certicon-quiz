@@ -23,9 +23,6 @@
   <meta name="twitter:title" content="Certicon | Simulação de Crédito" />
   <meta name="twitter:description" content="Responda ao quiz e fale com um especialista em crédito." />
   <meta name="twitter:image" content="https://certiconquiz.simulead.com.br/assets/contemplados/cliente-foto-02.jpg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <script>
     !function(f,b,e,v,n,t,s) {
       if (f.fbq) return;
@@ -71,7 +68,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: var(--cor-texto);
       background:
         radial-gradient(circle at 20% 0%, rgba(220, 38, 38, 0.08), transparent 32%),
@@ -1752,28 +1749,28 @@
         <p class="helper">Escolha o bem que mais combina com seu plano.</p>
         <div class="option-grid">
           <button class="option-card interest-card" type="button" data-choice="interesse" data-value="Imóvel">
-            <img class="interest-photo" alt="Casa residencial moderna" src="assets/interesses/imovel.jpg" />
+            <img class="interest-photo" alt="Casa residencial moderna" src="assets/interesses/imovel.webp" width="600" height="450" decoding="async" fetchpriority="high" />
             <span class="interest-body">
               <span class="option-title">Imóvel</span>
               <span class="option-sub">Casa, apartamento, terreno ou construção.</span>
             </span>
           </button>
           <button class="option-card interest-card" type="button" data-choice="interesse" data-value="Carro">
-            <img class="interest-photo" alt="Carro moderno" src="assets/interesses/carro.jpg" />
+            <img class="interest-photo" alt="Carro moderno" src="assets/interesses/carro.webp" width="600" height="450" decoding="async" />
             <span class="interest-body">
               <span class="option-title">Carro</span>
               <span class="option-sub">Novo, seminovo ou troca planejada.</span>
             </span>
           </button>
           <button class="option-card interest-card" type="button" data-choice="interesse" data-value="Caminhão">
-            <img class="interest-photo" alt="Caminhão de carga moderno" src="assets/interesses/caminhao.jpg" />
+            <img class="interest-photo" alt="Caminhão de carga moderno" src="assets/interesses/caminhao.webp" width="600" height="450" decoding="async" loading="lazy" />
             <span class="interest-body">
               <span class="option-title">Caminhão</span>
               <span class="option-sub">Para trabalho, frota ou expansão.</span>
             </span>
           </button>
           <button class="option-card interest-card" type="button" data-choice="interesse" data-value="Maquinário">
-            <img class="interest-photo" alt="Retroescavadeira amarela" src="assets/interesses/maquinario.jpg" />
+            <img class="interest-photo" alt="Retroescavadeira amarela" src="assets/interesses/maquinario.webp" width="600" height="450" decoding="async" loading="lazy" />
             <span class="interest-body">
               <span class="option-title">Maquinário</span>
               <span class="option-sub">Equipamentos para produzir mais.</span>
@@ -1908,25 +1905,25 @@
         <section class="truck-showcase" id="truckShowcase" aria-label="Clientes contemplados" hidden>
           <div class="truck-carousel" id="truckCarousel">
             <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
-              <video src="./assets/contemplados/cliente-video-01.mp4" muted playsinline autoplay preload="metadata"></video>
+              <video data-src="./assets/contemplados/cliente-video-01.mp4" muted playsinline preload="none"></video>
               <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <img src="./assets/contemplados/cliente-foto-01.jpg" alt="Cliente contemplado da Certicon" loading="lazy">
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
-              <video src="./assets/contemplados/cliente-video-02.mp4" muted playsinline autoplay preload="metadata"></video>
+              <video data-src="./assets/contemplados/cliente-video-02.mp4" muted playsinline preload="none"></video>
               <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Caminhão" aria-hidden="true">
               <img src="./assets/contemplados/cliente-foto-02.jpg" alt="Cliente contemplado da Certicon" loading="lazy">
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
-              <video src="./assets/contemplados/imovel-video-01.mp4" muted playsinline autoplay preload="metadata"></video>
+              <video data-src="./assets/contemplados/imovel-video-01.mp4" muted playsinline preload="none"></video>
               <button class="truck-audio-toggle needs-attention" type="button" data-audio-toggle aria-label="Ativar áudio deste vídeo">🔇</button>
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
-              <video src="./assets/contemplados/imovel-video-02.mp4" muted playsinline autoplay preload="metadata"></video>
+              <video data-src="./assets/contemplados/imovel-video-02.mp4" muted playsinline preload="none"></video>
             </article>
             <article class="truck-slide" data-truck-slide data-showcase-interest="Imóvel" aria-hidden="true">
               <img src="./assets/contemplados/imovel-foto-01.jpg" alt="Clientes contemplados com imóvel pela Certicon" loading="lazy">
@@ -2212,6 +2209,12 @@
       button.setAttribute("aria-label", video.muted ? "Ativar áudio deste vídeo" : "Silenciar este vídeo");
     }
 
+    function loadVideoSource(video) {
+      if (video.hasAttribute("src") || !video.dataset.src) return;
+      video.src = video.dataset.src;
+      video.load();
+    }
+
     function scheduleTruckSlide() {
       window.clearTimeout(truckCarouselTimer);
       truckCarouselTimer = window.setTimeout(() => showTruckSlide(truckSlideIndex + 1), 10000);
@@ -2230,11 +2233,12 @@
         if (!video) return;
         video.onended = null;
         if (isActive) {
-          video.currentTime = 0;
+          loadVideoSource(video);
+          if (video.readyState > 0) video.currentTime = 0;
           video.play().catch(() => {});
         } else {
           video.pause();
-          video.currentTime = 0;
+          if (video.readyState > 0) video.currentTime = 0;
           video.muted = true;
         }
         updateAudioButton(video);
@@ -2253,7 +2257,7 @@
         const video = slide.querySelector("video");
         if (!video) return;
         video.pause();
-        video.currentTime = 0;
+        if (video.readyState > 0) video.currentTime = 0;
         video.muted = true;
         updateAudioButton(video);
       });

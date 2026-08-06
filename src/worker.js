@@ -423,7 +423,17 @@ export default {
       return apiJson(request, { ok: false, error: "Método não permitido" }, 405, { Allow: "POST, OPTIONS" });
     }
 
-    return env.ASSETS.fetch(request);
+    const assetResponse = await env.ASSETS.fetch(request);
+    if (url.pathname.startsWith("/assets/") && assetResponse.ok) {
+      const headers = new Headers(assetResponse.headers);
+      headers.set("Cache-Control", "public, max-age=604800");
+      return new Response(assetResponse.body, {
+        status: assetResponse.status,
+        statusText: assetResponse.statusText,
+        headers
+      });
+    }
+    return assetResponse;
   },
 
   async scheduled(_controller, env, ctx) {
